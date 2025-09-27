@@ -1,0 +1,12 @@
+.cards {
+    display: grid;
+    grid-template-columns: repeat(var(--cards-col), var(--card-w));
+    grid-auto-rows: var(--card-h);
+    gap: var(--cards-gap);
+}
+
+.card {
+    padding: 16px;
+    background: var(--frost-40);
+    border-radius: var(--glass-radius);
+}

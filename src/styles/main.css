@@ -1,0 +1,10 @@
+@import "./globals/reset.css";
+@import "./globals/variables.css";
+@import "./globals/layout.css";
+
+@import "./blocks/stage.css";
+@import "./blocks/header.css";
+@import "./blocks/weather.css";
+@import "./blocks/card.css";
+@import "./blocks/slider.css";
+@import "./blocks/footer.css";

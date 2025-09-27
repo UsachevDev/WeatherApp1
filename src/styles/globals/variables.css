@@ -1,0 +1,36 @@
+:root {
+    --font-family: "Raleway", sans-serif;
+
+    --page-min-width: 1280px;
+    --stage-w: 1120px;
+    --stage-pad: 32px;
+
+    --search-w: 506px;
+    --search-h: 48px;
+    --search-px: 16px;
+    --cards-col: 3;
+    --card-w: 158px;
+    --card-h: 196px;
+    --cards-gap: 16px;
+
+    --weather-w: 534px;
+    --weather-h: 408px;
+
+    --color-text-primary: #F5F4F4;
+    --neutral-600-10: #7070701A;
+    --frost-40: #F5F4F466;
+
+    --glass-blur: 50px;
+    --glass-radius: 8px;
+
+    --gap-lg: 24px;
+    --gap-md: 16px;
+    --gap-sm: 8px;
+    --fz-xxl: 112px;
+    --fz-lg: 24px;
+    --fz-md: 20px;
+    --fz-sm: 14px;
+    --lh-xxl: 112px;
+    --lh-lg: 32px;
+    --lh-md: 24px;
+}
