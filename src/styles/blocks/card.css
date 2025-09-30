@@ -1,12 +1,42 @@
 .cards {
-    display: grid;
-    grid-template-columns: repeat(var(--cards-col), var(--card-w));
-    grid-auto-rows: var(--card-h);
-    gap: var(--cards-gap);
+  display: grid;
+  grid-template-columns: repeat(var(--cards-col), var(--card-w));
+  grid-auto-rows: var(--card-h);
+  gap: var(--cards-gap);
 }
 
 .card {
-    padding: 16px;
-    background: var(--frost-40);
-    border-radius: var(--glass-radius);
+  background: var(--frost-40);
+  border-radius: var(--glass-radius);
+  border: 1px solid var(--glass-stroke);
+  box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-inner);
+  overflow: hidden;
+  display: flex;
+}
+
+.card__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px;
+  width: 100%;
+  height: 100%;
+}
+
+.card__title {
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  text-shadow: var(--txt-glow-weak);
+}
+
+.card__value {
+  margin-top: auto;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 24px;
+  color: var(--color-text-primary);
+  text-shadow: var(--txt-glow-weak);
 }
