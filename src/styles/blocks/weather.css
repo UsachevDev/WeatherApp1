@@ -1,57 +1,67 @@
 .weather {
-    width: var(--weather-w);
-    height: var(--weather-h);
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
+  width: var(--weather-w);
+  height: var(--weather-h);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: start;
+}
+
+.weather__head {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  text-align: center;
 }
 
 .weather__city {
-    font-size: var(--fz-lg);
-    line-height: var(--lh-lg);
-    font-weight: 700;
+  font-weight: 700;
+  font-size: var(--fz-lg);
+  line-height: var(--lh-lg);
+  text-shadow: var(--txt-glow-weak);
 }
 
 .weather__date {
-    font-size: var(--fz-md);
-    line-height: var(--lh-md);
+  opacity: 0.95;
+  font-size: var(--fz-md);
+  line-height: var(--lh-md);
+  text-shadow: var(--txt-glow-weak);
+}
 
+.weather__center {
+  display: grid;
+  place-items: center;
 }
 
 .weather__temp {
-    font-size: var(--fz-xxl);
-    font-weight: 700;
-    line-height: var(--lh-xxl);
+  font-weight: 700;
+  font-size: var(--fz-xxl);
+  line-height: var(--lh-xxl);
+  letter-spacing: -1px;
+  /* деликатнее, как референс из «идеального» состояния */
+  text-shadow: var(--txt-temp);
+}
+
+.weather__meta {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  align-items: center;
+}
+
+.weather__row {
+  display: flex;
+  align-items: center;
+  column-gap: 8px;
+  justify-content: center;
+}
+
+.weather__icon {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
 }
 
 .weather__status,
 .weather__feels {
-    font-size: var(--fz-md);
-}
-
-.weather__row {
-    display: flex;
-    align-items: center;
-    column-gap: 8px;
-    justify-content: center;
-}
-
-.weather__icon {
-    width: 24px;
-    height: 24px;
-}
-
-.weather__head {
-    display: flex;
-    flex-direction: column;
-    row-gap: 8px;
-}
-
-.weather__meta {
-    display: flex;
-    flex-direction: column;
-    row-gap: 8px;
+  text-shadow: var(--txt-glow-weak);
 }
