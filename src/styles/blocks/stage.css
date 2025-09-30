@@ -1,30 +1,58 @@
 .stage {
-    width: var(--stage-w);
-    margin: var(--gap-lg) auto 0;
-    background: var(--neutral-600-10);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border-radius: var(--glass-radius);
-    display: grid;
-    grid-template-rows: auto 1fr;
+  position: relative;
+  width: var(--stage-w);
+  padding: var(--stage-pad);
+  margin: var(--gap-lg) auto 0;
+
+  background: var(--neutral-600-10);
+  backdrop-filter: blur(var(--glass-blur)) saturate(0.95);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(0.95);
+
+  border-radius: calc(var(--glass-radius) + 4px);
+  border: 1px solid var(--glass-stroke);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 var(--glass-inner);
+
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  row-gap: var(--gap-lg);
+  overflow: hidden;
+}
+
+/* мягкая виньетка без пересвета */
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 60%;
+  background: radial-gradient(
+    60% 60% at 50% 40%,
+    rgba(255, 255, 255, 0.06),
+    transparent 70%
+  );
+  filter: blur(30px);
+  pointer-events: none;
 }
 
 .stage__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--stage-pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
 }
 
 .stage__grid {
-    display: grid;
-    grid-template-columns: var(--weather-w) var(--search-w);
-    column-gap: 16px;
-    align-items: start;
-    padding: var(--stage-pad);
+  display: grid;
+  grid-template-columns: var(--weather-w) 1fr;
+  column-gap: 32px;
+  align-items: start;
 }
 
 .stage__footer {
-    height: 84px;
-    padding: var(--stage-pad);
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--glass-stroke);
+  opacity: 0.75;
+  font-size: var(--fz-sm);
 }
