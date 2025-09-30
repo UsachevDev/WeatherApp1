@@ -24,14 +24,12 @@ body {
   display: block;
 }
 
-/* фокус на клавиатуре — БЕЗ инпута поиска, чтобы не было двойной рамки */
 a:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
-/* утилиты свечения текста */
 .u-glow {
   text-shadow: var(--txt-glow-weak);
 }
@@ -39,7 +37,6 @@ button:focus-visible {
   text-shadow: var(--txt-glow-strong);
 }
 
-/* уважение reduce-motion */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;

@@ -37,7 +37,6 @@
   font-size: var(--fz-xxl);
   line-height: var(--lh-xxl);
   letter-spacing: -1px;
-  /* деликатнее, как референс из «идеального» состояния */
   text-shadow: var(--txt-temp);
 }
 

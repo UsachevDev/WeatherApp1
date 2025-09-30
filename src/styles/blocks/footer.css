@@ -1,4 +1,9 @@
-.footer {
-    text-align: center;
-    font-size: var(--fz-sm);
+.stage__footer {
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--glass-stroke);
+  opacity: 0.75;
+  font-size: var(--fz-sm);
 }

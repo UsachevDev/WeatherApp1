@@ -1,4 +1,3 @@
-/* ЛОГО */
 .header__logo-link {
   display: inline-block;
 }
@@ -8,12 +7,11 @@
   display: block;
 }
 
-/* ПОИСК */
 .search {
   position: relative;
   width: var(--search-w);
   height: var(--search-h);
-  padding: 0 var(--search-px); /* только горизонталь */
+  padding: 0 var(--search-px);
   background: var(--frost-40);
   border-radius: var(--glass-radius);
   display: grid;
@@ -24,7 +22,6 @@
   box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-inner);
 }
 
-/* переносим визуальный фокус на контейнер, чтобы не было «двойного бордера» */
 .search:focus-within {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
@@ -38,7 +35,7 @@
   background: transparent;
   padding: 0;
   border: none;
-  outline: none; /* <- глушим внутреннюю рамку */
+  outline: none;
 }
 .search__input::placeholder {
   color: var(--color-text-primary);
@@ -52,7 +49,6 @@
   display: block;
 }
 
-/* кнопки 32×32, по центру */
 .search__btn {
   position: absolute;
   top: 50%;
@@ -75,7 +71,6 @@
   display: block;
 }
 
-/* показываем только одну кнопку */
 .search__btn--submit.is-hidden {
   display: none;
 }
@@ -86,7 +81,6 @@
   display: grid;
 }
 
-/* подсказки */
 .search__suggest {
   position: absolute;
   left: 16px;

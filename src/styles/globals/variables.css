@@ -1,40 +1,33 @@
 :root {
   --font-family: "Raleway", sans-serif;
 
-  /* размеры макета */
   --page-min-width: 1280px;
   --stage-w: 1120px;
   --stage-pad: 32px;
 
-  /* поиск */
   --search-w: 506px;
   --search-h: 48px;
   --search-px: 16px;
   --search-btn: 32px;
 
-  /* правый столбец */
   --cards-col: 3;
   --card-w: 158px;
   --card-h: 196px;
   --cards-gap: 16px;
 
-  /* левый блок */
   --weather-w: 534px;
   --weather-h: 408px;
 
-  /* слайдер (почасовой прогноз) */
   --slider-h: 192px;
   --hour-item-w: 96px;
   --hour-icon: 56px;
   --hour-gap: 16px;
 
-  /* базовые цвета/прозрачности (LIGHT) */
   --color-text-primary: #f5f4f4;
   --text-dim: #f5f4f4cc;
-  --neutral-600-10: #7070701a; /* фон большой панели */
-  --frost-40: #f5f4f466; /* стекло внутри элементов */
+  --neutral-600-10: #7070701a;
+  --frost-40: #f5f4f466;
 
-  /* стекло/тени/акценты */
   --glass-blur: 50px;
   --glass-radius: 8px;
   --glass-stroke: #ffffff29;
@@ -43,13 +36,10 @@
   --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
   --ring: #ffffff66;
 
-  /* ореолы текста (мягче) */
   --txt-glow-weak: 0 1px 2px rgba(0, 0, 0, 0.28), 0 0 10px rgba(0, 0, 0, 0.2);
   --txt-glow-strong: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 18px rgba(0, 0, 0, 0.3);
-  /* для крупной температуры — ещё аккуратнее, как «реф» из макета */
   --txt-temp: 0 2px 6px rgba(0, 0, 0, 0.35), 0 0 16px rgba(0, 0, 0, 0.28);
 
-  /* отступы и типографика */
   --gap-lg: 24px;
   --gap-md: 16px;
   --gap-sm: 8px;

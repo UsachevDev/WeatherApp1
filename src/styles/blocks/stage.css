@@ -18,7 +18,6 @@
   overflow: hidden;
 }
 
-/* мягкая виньетка без пересвета */
 .stage::after {
   content: "";
   position: absolute;

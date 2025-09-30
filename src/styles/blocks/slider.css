@@ -12,7 +12,6 @@
   overflow: hidden;
 }
 
-/* горизонтальный список с прокруткой */
 .slider__list {
   height: 100%;
   display: grid;
@@ -27,18 +26,20 @@
   scrollbar-width: thin;
   scrollbar-color: #ffffff3a transparent;
 }
+
 .slider__list::-webkit-scrollbar {
   height: 8px;
 }
+
 .slider__list::-webkit-scrollbar-thumb {
   background: #ffffff3a;
   border-radius: 4px;
 }
+
 .slider__list::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* карточка одного часа */
 .slider__item {
   scroll-snap-align: start;
   background: rgba(255, 255, 255, 0.06);
