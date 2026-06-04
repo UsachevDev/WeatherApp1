@@ -34,6 +34,7 @@ const ICONS = {
   visibility: `<svg class="card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`,
   sunrise: `<svg class="card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M5.6 9.6 4 8M18.4 9.6 20 8M2 18h20M8 18a4 4 0 0 1 8 0M9 7l3-3 3 3"/></svg>`,
   sunset: `<svg class="card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7V3M5.6 9.6 4 8M18.4 9.6 20 8M2 18h20M8 18a4 4 0 0 1 8 0M9 4l3 3 3-3"/></svg>`,
+  uv: `<svg class="card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   github: `<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.555-1.11-4.555-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>`,
 };
 
@@ -255,12 +256,19 @@ async function fetchWeather(lat, lon, tz, units) {
   const u = UNITS[units];
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m,pressure_msl,visibility` +
+    `&current=temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m,wind_direction_10m,pressure_msl,visibility,uv_index` +
     `&hourly=temperature_2m,apparent_temperature,weather_code,is_day,precipitation_probability,relative_humidity_2m,wind_speed_10m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max` +
     `&forecast_days=7&temperature_unit=${u.temp}&wind_speed_unit=${u.wind}&precipitation_unit=${u.precip}` +
     `&timeformat=unixtime&timezone=${encodeURIComponent(tz)}`;
   return fetchJSONResilient(url, { timeout: 14000 });
+}
+
+async function fetchAirQuality(lat, lon, tz) {
+  const url =
+    `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}` +
+    `&current=us_aqi,pm2_5,pm10,ozone&timezone=${encodeURIComponent(tz)}`;
+  return fetchJSONResilient(url, { timeout: 12000 });
 }
 
 /* ========== toast ========== */
@@ -339,12 +347,14 @@ function renderCards(data) {
     if (node) node.innerHTML = unit ? `${value}<small>${unit}</small>` : value;
   };
   set("humidity", Math.round(c.relative_humidity_2m), "%");
-  set("wind", Math.round(c.wind_speed_10m), cfg.windLabel);
   set("pressure", fmtPressure(c.pressure_msl, u), cfg.presLabel);
   set("visibility", fmtVisibility(c.visibility ?? 0, u), cfg.visLabel);
-  const tz = data.tz ?? state.geo.tz;
-  set("sunrise", fmtHM(new Date(data.daily.sunrise[0] * 1000), tz), "");
-  set("sunset", fmtHM(new Date(data.daily.sunset[0] * 1000), tz), "");
+  set("uv", `${Math.round(c.uv_index ?? 0)}`);
+  const uvHint = document.querySelector('.card__hint[data-field="uv"]');
+  if (uvHint) {
+    uvHint.textContent = uvLabel(c.uv_index);
+    uvHint.style.color = uvColor(c.uv_index);
+  }
 }
 
 /* ========== render: hourly slider ========== */
@@ -374,6 +384,199 @@ function renderHourly(data, geo) {
     list.append(li);
     count++;
   }
+}
+
+/* ========== render: 24-hour chart ========== */
+function renderChart(data) {
+  const box = $(".chart__box");
+  if (!box) return;
+  const tz = data.tz ?? state.geo.tz;
+  const { time, temperature_2m, precipitation_probability } = data.hourly;
+  const nowTs = Date.now();
+  const idx = [];
+  for (let i = 0; i < time.length && idx.length < 24; i++) {
+    if (time[i] * 1000 >= nowTs - 3600000) idx.push(i);
+  }
+  if (idx.length < 2) return;
+
+  const temps = idx.map((i) => temperature_2m[i]);
+  const pops = idx.map((i) => precipitation_probability?.[i] ?? 0);
+  const labels = idx.map((i, k) => (k === 0 ? "Now" : fmtHour(new Date(time[i] * 1000), tz)));
+
+  const W = 760, H = 200;
+  const padL = 16, padR = 16, padT = 26, padB = 42;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const n = temps.length;
+  let tmin = Math.min(...temps), tmax = Math.max(...temps);
+  if (tmax - tmin < 4) { const m = (tmax + tmin) / 2; tmin = m - 2; tmax = m + 2; }
+  const x = (k) => padL + (k * plotW) / (n - 1);
+  const y = (t) => padT + (1 - (t - tmin) / (tmax - tmin)) * plotH;
+  const baseY = padT + plotH;
+
+  // smooth line path (Catmull-Rom → cubic bezier)
+  const pts = temps.map((t, k) => [x(k), y(t)]);
+  let line = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let k = 0; k < pts.length - 1; k++) {
+    const p0 = pts[k - 1] || pts[k];
+    const p1 = pts[k];
+    const p2 = pts[k + 1];
+    const p3 = pts[k + 2] || p2;
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+    const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+    const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    line += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  const area = `${line} L ${x(n - 1).toFixed(1)} ${baseY} L ${x(0).toFixed(1)} ${baseY} Z`;
+
+  // precipitation bars
+  const barW = Math.max(2, plotW / n - 4);
+  let bars = "";
+  pops.forEach((p, k) => {
+    if (!p) return;
+    const h = (p / 100) * (plotH * 0.55);
+    bars += `<rect x="${(x(k) - barW / 2).toFixed(1)}" y="${(baseY - h).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="rgba(142,197,255,0.28)"></rect>`;
+  });
+
+  // x labels (every ~4h)
+  let ticks = "";
+  labels.forEach((lab, k) => {
+    if (k % 4 === 0 || k === n - 1) {
+      ticks += `<text x="${x(k).toFixed(1)}" y="${H - 14}" text-anchor="middle" class="chart__label">${lab}</text>`;
+    }
+  });
+
+  const cur = pts[0];
+  box.innerHTML = `
+    <svg class="chart__svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Temperature over the next 24 hours">
+      <defs>
+        <linearGradient id="tgrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${tempColor(tmax)}" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="${tempColor(tmin)}" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      ${bars}
+      <path d="${area}" fill="url(#tgrad)"></path>
+      <path d="${line}" fill="none" stroke="#cfe4ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${cur[0].toFixed(1)}" cy="${cur[1].toFixed(1)}" r="4.5" fill="#fff"/>
+      <line class="chart__cursor" x1="0" y1="${padT}" x2="0" y2="${baseY}" stroke="rgba(255,255,255,0.5)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/>
+      <circle class="chart__marker" r="4.5" fill="#8ec5ff" style="opacity:0"/>
+      ${ticks}
+    </svg>
+    <div class="chart__tip" style="opacity:0"></div>`;
+
+  // hover interaction
+  const svg = box.querySelector(".chart__svg");
+  const cursor = box.querySelector(".chart__cursor");
+  const marker = box.querySelector(".chart__marker");
+  const tip = box.querySelector(".chart__tip");
+  const onMove = (ev) => {
+    const r = box.getBoundingClientRect();
+    const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    const k = Math.max(0, Math.min(n - 1, Math.round(((px / r.width) * W - padL) / (plotW / (n - 1)))));
+    const cx = x(k), cy = y(temps[k]);
+    cursor.setAttribute("x1", cx); cursor.setAttribute("x2", cx); cursor.style.opacity = "1";
+    marker.setAttribute("cx", cx); marker.setAttribute("cy", cy); marker.style.opacity = "1";
+    tip.style.opacity = "1";
+    tip.style.left = `${(cx / W) * 100}%`;
+    tip.innerHTML = `<b>${Math.round(temps[k])}°</b><span>${labels[k]}</span>${pops[k] ? `<em>${pops[k]}% rain</em>` : ""}`;
+  };
+  const onLeave = () => { cursor.style.opacity = "0"; marker.style.opacity = "0"; tip.style.opacity = "0"; };
+  box.onmousemove = onMove;
+  box.onmouseleave = onLeave;
+  box.ontouchmove = onMove;
+}
+
+/* ========== render: insights (wind compass + daylight) ========== */
+function renderInsights(data) {
+  const c = data.current;
+  const tz = data.tz ?? state.geo.tz;
+  const cfg = UNITS[state.units];
+
+  /* --- wind compass --- */
+  const windBox = $(".insight--wind .insight__body");
+  if (windBox) {
+    const deg = c.wind_direction_10m ?? 0;
+    const abbr = degToCompass(deg);
+    windBox.innerHTML = `
+      <svg class="compass" viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"/>
+        <text x="60" y="18" class="compass__pt">N</text>
+        <text x="106" y="64" class="compass__pt">E</text>
+        <text x="60" y="110" class="compass__pt">S</text>
+        <text x="14" y="64" class="compass__pt">W</text>
+        <g transform="rotate(${deg} 60 60)">
+          <path d="M60 22 L52 64 L60 58 L68 64 Z" fill="#8ec5ff"/>
+          <path d="M60 98 L53 60 L60 66 L67 60 Z" fill="rgba(255,255,255,0.35)"/>
+        </g>
+        <circle cx="60" cy="60" r="4" fill="#fff"/>
+      </svg>
+      <div class="insight__readout">
+        <div class="insight__value">${Math.round(c.wind_speed_10m)}<small>${cfg.windLabel}</small></div>
+        <div class="insight__hint">${abbr} · ${Math.round(deg)}°</div>
+      </div>`;
+  }
+
+  /* --- daylight sun-arc --- */
+  const sunBox = $(".insight--sun .insight__body");
+  if (sunBox) {
+    const sr = data.daily.sunrise[0] * 1000;
+    const ss = data.daily.sunset[0] * 1000;
+    const now = Date.now();
+    let prog = (now - sr) / (ss - sr);
+    const isDayNow = prog >= 0 && prog <= 1;
+    prog = Math.max(0, Math.min(1, prog));
+    // quadratic bezier P0(10,70) P1(110,-8) P2(210,70)
+    const bez = (t, a, b, cc) => (1 - t) * (1 - t) * a + 2 * (1 - t) * t * b + t * t * cc;
+    const sx = bez(prog, 10, 110, 210);
+    const sy = bez(prog, 70, -8, 70);
+    const lenMin = Math.round((ss - sr) / 60000);
+    const dl = `${Math.floor(lenMin / 60)}h ${lenMin % 60}m`;
+    sunBox.innerHTML = `
+      <svg class="sunarc" viewBox="0 0 220 84" aria-hidden="true">
+        <line x1="6" y1="70" x2="214" y2="70" stroke="rgba(255,255,255,0.18)"/>
+        <path d="M10 70 Q110 -8 210 70" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-dasharray="4 4"/>
+        <path d="M10 70 Q110 -8 210 70" fill="none" stroke="url(#sunline)" stroke-width="2.5"
+          stroke-dasharray="${prog * 250} 250"/>
+        <defs><linearGradient id="sunline" x1="0" x2="1"><stop offset="0" stop-color="#ffd28e"/><stop offset="1" stop-color="#ff9e3c"/></linearGradient></defs>
+        <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="7" fill="${isDayNow ? "#ffd86b" : "rgba(255,255,255,0.4)"}"/>
+      </svg>
+      <div class="sunarc__row">
+        <span>↑ ${fmtHM(new Date(sr), tz)}</span>
+        <span class="sunarc__len">${isDayNow ? dl + " of daylight" : "Nighttime"}</span>
+        <span>↓ ${fmtHM(new Date(ss), tz)}</span>
+      </div>`;
+  }
+}
+
+/* ========== render: air quality ========== */
+function renderAirQuality(aq) {
+  const box = $(".insight--aqi .insight__body");
+  if (!box) return;
+  const cur = aq?.current;
+  if (!cur || cur.us_aqi == null) {
+    box.innerHTML = `<div class="insight__hint">Air quality data is unavailable for this location.</div>`;
+    return;
+  }
+  const aqi = Math.round(cur.us_aqi);
+  const info = aqiInfo(aqi);
+  const chip = (label, val, unit) =>
+    `<div class="aqi__chip"><span>${label}</span><b>${val != null ? Math.round(val) : "—"}${unit}</b></div>`;
+  box.innerHTML = `
+    <div class="aqi__head">
+      <div class="aqi__num" style="color:${info.color}">${aqi}</div>
+      <div>
+        <div class="aqi__label" style="color:${info.color}">${info.label}</div>
+        <div class="insight__hint">US AQI</div>
+      </div>
+    </div>
+    <div class="aqi__scale"><span class="aqi__marker" style="left:${info.pct}%"></span></div>
+    <div class="aqi__chips">
+      ${chip("PM2.5", cur.pm2_5, "")}
+      ${chip("PM10", cur.pm10, "")}
+      ${chip("Ozone", cur.ozone, "")}
+    </div>`;
 }
 
 /* ========== render: 7-day forecast ========== */
@@ -540,6 +743,29 @@ const uvLabel = (uv) => {
   if (v < 11) return "Very high";
   return "Extreme";
 };
+const uvColor = (uv) => {
+  const v = uv ?? 0;
+  if (v < 3) return "#67d36b";
+  if (v < 6) return "#e8d54a";
+  if (v < 8) return "#fb963c";
+  if (v < 11) return "#f5553c";
+  return "#b85cff";
+};
+
+/* ===== wind / air-quality helpers ===== */
+const COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+const degToCompass = (deg) => COMPASS[Math.round(((deg % 360) / 22.5)) % 16];
+
+function aqiInfo(aqi) {
+  const v = aqi ?? 0;
+  if (v <= 50) return { label: "Good", color: "#67d36b", pct: v / 50 * 20 };
+  if (v <= 100) return { label: "Moderate", color: "#e8d54a", pct: 20 + (v - 50) / 50 * 20 };
+  if (v <= 150) return { label: "Unhealthy (sensitive)", color: "#fb963c", pct: 40 + (v - 100) / 50 * 20 };
+  if (v <= 200) return { label: "Unhealthy", color: "#f5553c", pct: 60 + (v - 150) / 50 * 20 };
+  if (v <= 300) return { label: "Very unhealthy", color: "#b85cff", pct: 80 + (v - 200) / 100 * 15 };
+  return { label: "Hazardous", color: "#a13045", pct: 100 };
+}
 
 /* ========== orchestration ========== */
 async function loadWeather(geo) {
@@ -553,8 +779,15 @@ async function loadWeather(geo) {
     renderWeather(data, geo);
     renderCards(data);
     renderHourly(data, geo);
+    renderChart(data);
+    renderInsights(data);
     renderDaily(data);
     localStorage.setItem("lastGeo", JSON.stringify(geo));
+
+    // air quality loads independently — never blocks the main view
+    fetchAirQuality(geo.lat, geo.lon, geo.tz)
+      .then((aq) => renderAirQuality(aq))
+      .catch(() => renderAirQuality(null));
   } catch (e) {
     setLoading(false);
     showToast(friendlyError(e), "error", { label: "Retry", onClick: () => loadWeather(geo) });
@@ -807,11 +1040,9 @@ function buildWeather() {
 
 const CARD_FIELDS = [
   ["humidity", "Humidity", ICONS.humidity],
-  ["wind", "Wind", ICONS.wind],
   ["pressure", "Pressure", ICONS.pressure],
   ["visibility", "Visibility", ICONS.visibility],
-  ["sunrise", "Sunrise", ICONS.sunrise],
-  ["sunset", "Sunset", ICONS.sunset],
+  ["uv", "UV index", ICONS.uv],
 ];
 
 function buildCards() {
@@ -823,6 +1054,11 @@ function buildCards() {
     const value = el("div", "card__value", "—");
     value.dataset.field = key;
     card.append(head, value);
+    if (key === "uv") {
+      const hint = el("div", "card__hint", "");
+      hint.dataset.field = "uv";
+      card.append(hint);
+    }
     cards.append(card);
   });
   return cards;
@@ -834,6 +1070,29 @@ function buildSection(titleText, listTag, listClass, blockClass, delay) {
   const title = el("h2", "stage__section-title", titleText);
   const list = el(listTag, listClass);
   sec.append(title, list);
+  return sec;
+}
+
+function buildChart() {
+  const sec = el("section", "chart u-rise");
+  sec.style.animationDelay = "0.1s";
+  sec.append(el("h2", "stage__section-title", "Next 24 hours"), el("div", "chart__box"));
+  return sec;
+}
+
+function buildInsights() {
+  const sec = el("section", "insights u-rise");
+  sec.style.animationDelay = "0.15s";
+  const panel = (cls, title) => {
+    const p = el("div", `insight ${cls}`);
+    p.append(el("h3", "insight__title", title), el("div", "insight__body"));
+    return p;
+  };
+  sec.append(
+    panel("insight--aqi", "Air quality"),
+    panel("insight--wind", "Wind"),
+    panel("insight--sun", "Daylight"),
+  );
   return sec;
 }
 
@@ -862,6 +1121,8 @@ function render() {
   grid.append(buildWeather(), buildCards());
   stage.append(grid);
 
+  stage.append(buildChart());
+  stage.append(buildInsights());
   stage.append(buildSection("Hourly forecast", "ul", "slider__list", "slider", "0.1s"));
   stage.append(buildSection("7-day forecast", "div", "daily__list", "daily", "0.15s"));
   stage.append(buildFooter());

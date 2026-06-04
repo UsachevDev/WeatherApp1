@@ -6,6 +6,8 @@
 @import "./blocks/header.css";
 @import "./blocks/weather.css";
 @import "./blocks/card.css";
+@import "./blocks/chart.css";
+@import "./blocks/insights.css";
 @import "./blocks/slider.css";
 @import "./blocks/daily.css";
 @import "./blocks/modal.css";

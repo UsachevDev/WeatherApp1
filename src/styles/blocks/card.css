@@ -1,7 +1,8 @@
 .cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--gap-md);
+  align-content: stretch;
 }
 
 .card {
@@ -56,20 +57,13 @@
 
 .card__hint {
   font-size: var(--fz-xs);
+  font-weight: 600;
   color: var(--text-faint);
 }
 
-@media (max-width: 1024px) {
-  .cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 @media (max-width: 420px) {
-  .cards {
-    grid-template-columns: 1fr 1fr;
-  }
   .card {
-    min-height: 110px;
+    min-height: 104px;
     padding: 14px;
   }
 }
