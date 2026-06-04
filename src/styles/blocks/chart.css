@@ -17,10 +17,21 @@
   display: block;
 }
 
-.chart__label {
-  fill: var(--text-faint);
-  font-size: 12px;
-  font-family: var(--font-family);
+.chart__labels {
+  position: relative;
+  height: 18px;
+  margin-top: 4px;
+}
+.chart__labels span {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: var(--fz-xs);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+/* keep the first label from clipping the left edge */
+.chart__labels span:first-child {
+  transform: none;
 }
 
 .chart__tip {

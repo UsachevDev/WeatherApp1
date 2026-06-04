@@ -406,7 +406,7 @@ function renderChart(data) {
   const labels = idx.map((i, k) => (k === 0 ? "Now" : fmtHour(new Date(time[i] * 1000), tz)));
 
   const W = 760, H = 200;
-  const padL = 16, padR = 16, padT = 26, padB = 42;
+  const padL = 16, padR = 16, padT = 26, padB = 18;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
   const n = temps.length;
@@ -441,11 +441,11 @@ function renderChart(data) {
     bars += `<rect x="${(x(k) - barW / 2).toFixed(1)}" y="${(baseY - h).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="rgba(142,197,255,0.28)"></rect>`;
   });
 
-  // x labels (every ~4h)
-  let ticks = "";
+  // x labels as HTML (real CSS px → readable on mobile, no SVG scaling)
+  let labelsHtml = "";
   labels.forEach((lab, k) => {
-    if (k % 4 === 0 || k === n - 1) {
-      ticks += `<text x="${x(k).toFixed(1)}" y="${H - 14}" text-anchor="middle" class="chart__label">${lab}</text>`;
+    if (k % 4 === 0) {
+      labelsHtml += `<span style="left:${((x(k) / W) * 100).toFixed(2)}%">${lab}</span>`;
     }
   });
 
@@ -464,8 +464,8 @@ function renderChart(data) {
       <circle cx="${cur[0].toFixed(1)}" cy="${cur[1].toFixed(1)}" r="4.5" fill="#fff"/>
       <line class="chart__cursor" x1="0" y1="${padT}" x2="0" y2="${baseY}" stroke="rgba(255,255,255,0.5)" stroke-width="1" stroke-dasharray="3 3" style="opacity:0"/>
       <circle class="chart__marker" r="4.5" fill="#8ec5ff" style="opacity:0"/>
-      ${ticks}
     </svg>
+    <div class="chart__labels">${labelsHtml}</div>
     <div class="chart__tip" style="opacity:0"></div>`;
 
   // hover interaction
