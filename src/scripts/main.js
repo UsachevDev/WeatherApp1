@@ -179,9 +179,61 @@ async function fetchJSON(url, { timeout = 12000, signal } = {}) {
   }
 }
 
+// Public CORS mirrors used as fallbacks when the direct API is blocked/slow
+const PROXIES = [
+  (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+];
+
+/**
+ * Resilient JSON fetch for unreliable networks/regions.
+ * Starts with a direct request; if it's slow or fails (e.g. 502),
+ * it hedges to proxy mirrors and resolves with whichever responds first.
+ */
+function fetchJSONResilient(url, { timeout = 14000, hedgeAfter = 2000 } = {}) {
+  const targets = [url, ...PROXIES.map((p) => p(url))];
+  const ctrls = [];
+  const started = new Set();
+  let failures = 0;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (fn, val) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(overall);
+      clearTimeout(hedge);
+      ctrls.forEach((c) => c.abort());
+      fn(val);
+    };
+    const overall = setTimeout(
+      () => finish(reject, new DOMException("Request timed out", "TimeoutError")),
+      timeout
+    );
+    const launch = (i) => {
+      if (settled || i >= targets.length || started.has(i)) return;
+      started.add(i);
+      const c = new AbortController();
+      ctrls.push(c);
+      fetch(targets[i], { signal: c.signal })
+        .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+        .then((j) => finish(resolve, j))
+        .catch(() => {
+          failures += 1;
+          launch(i + 1); // bring in the next mirror immediately
+          if (failures >= targets.length) {
+            finish(reject, new Error("Weather data is currently unavailable."));
+          }
+        });
+    };
+    launch(0);
+    // if the direct request is just slow, race the mirrors too
+    const hedge = setTimeout(() => targets.forEach((_, i) => launch(i)), hedgeAfter);
+  });
+}
+
 async function geocodeSearch(query, count = 1) {
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=${count}&language=en&format=json`;
-  const j = await fetchJSON(url, { timeout: 10000 });
+  const j = await fetchJSONResilient(url, { timeout: 12000 });
   if (!j.results || !j.results.length) throw new Error(`No results for “${query}”`);
   return j.results;
 }
@@ -205,7 +257,7 @@ async function fetchWeather(lat, lon, tz, units) {
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max` +
     `&forecast_days=7&temperature_unit=${u.temp}&wind_speed_unit=${u.wind}&precipitation_unit=${u.precip}` +
     `&timeformat=unixtime&timezone=${encodeURIComponent(tz)}`;
-  return fetchJSON(url, { timeout: 12000 });
+  return fetchJSONResilient(url, { timeout: 14000 });
 }
 
 /* ========== toast ========== */
