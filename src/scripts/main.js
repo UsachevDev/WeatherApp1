@@ -3,6 +3,9 @@
  * Data: Open-Meteo (forecast + geocoding), BigDataCloud (reverse geocoding)
  * ========================================================================= */
 
+import { createWeatherFX } from "./fx.js";
+let fx = null;
+
 /* ========== tiny DOM helpers ========== */
 const $ = (s, r = document) => r.querySelector(s);
 const el = (tag, cls, html) => {
@@ -305,9 +308,10 @@ function renderWeather(data, geo) {
   const info = codeInfo(c.weather_code);
   const now = new Date();
 
-  // background palette
+  // background palette + animated FX
   document.body.dataset.weather = info.group;
   document.body.dataset.time = isDay ? "day" : "night";
+  if (fx) fx.set(info.group, isDay);
 
   $(".weather__city").textContent = geo.name;
   $(".weather__date").textContent = fmtLongDate(now, geo.tz);
@@ -866,6 +870,7 @@ function render() {
 }
 
 render();
+fx = createWeatherFX(document.getElementById("fx"));
 
 /* initial load: last location → default city */
 (function start() {

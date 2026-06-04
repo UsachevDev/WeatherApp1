@@ -32,7 +32,7 @@ body {
 .page__bg {
   position: fixed;
   inset: -10%;
-  z-index: -2;
+  z-index: -3;
   background:
     radial-gradient(120% 120% at 15% 12%, rgba(255, 255, 255, 0.14), transparent 45%),
     linear-gradient(160deg, var(--bg-a, #2b4a73) 0%, var(--bg-b, #1b2a44) 55%, var(--bg-c, #121a2c) 100%);
@@ -53,6 +53,13 @@ body[data-weather="drizzle"]   { --bg-a: #4d6076; --bg-b: #324153; --bg-c: #1c25
 body[data-weather="snow"]      { --bg-a: #6d8198; --bg-b: #4a5c72; --bg-c: #2c3849; }
 body[data-weather="thunder"]   { --bg-a: #3a3357; --bg-b: #271f3e; --bg-c: #15101f; }
 body[data-weather="fog"]       { --bg-a: #5c636e; --bg-b: #41464f; --bg-c: #272a31; }
+
+.page__fx {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
 
 .page__glow {
   position: fixed;
