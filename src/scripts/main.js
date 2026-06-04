@@ -162,11 +162,26 @@ const shortDate = (d, tz) =>
   new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", timeZone: tz }).format(d);
 
 /* ========== API ========== */
+// fetch + JSON with a hard timeout so the UI can never hang forever
+async function fetchJSON(url, { timeout = 12000, signal } = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(
+    () => ctrl.abort(new DOMException("Request timed out", "TimeoutError")),
+    timeout
+  );
+  if (signal) signal.addEventListener("abort", () => ctrl.abort(signal.reason));
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    if (!r.ok) throw new Error(`Service error (HTTP ${r.status})`);
+    return await r.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function geocodeSearch(query, count = 1) {
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=${count}&language=en&format=json`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("Geocoding service is unavailable");
-  const j = await r.json();
+  const j = await fetchJSON(url, { timeout: 10000 });
   if (!j.results || !j.results.length) throw new Error(`No results for “${query}”`);
   return j.results;
 }
@@ -174,8 +189,7 @@ async function geocodeSearch(query, count = 1) {
 async function reverseGeocode(lat, lon) {
   try {
     const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
-    const r = await fetch(url);
-    const j = await r.json();
+    const j = await fetchJSON(url, { timeout: 8000 });
     return j.city || j.locality || j.principalSubdivision || "Your location";
   } catch {
     return "Your location";
@@ -191,20 +205,29 @@ async function fetchWeather(lat, lon, tz, units) {
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max` +
     `&forecast_days=7&temperature_unit=${u.temp}&wind_speed_unit=${u.wind}&precipitation_unit=${u.precip}` +
     `&timeformat=unixtime&timezone=${encodeURIComponent(tz)}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("Weather service is unavailable");
-  return r.json();
+  return fetchJSON(url, { timeout: 12000 });
 }
 
 /* ========== toast ========== */
 let toastTimer = null;
-function showToast(message, type = "info") {
+function hideToast() {
+  $("#toast").classList.remove("is-visible");
+}
+function showToast(message, type = "info", action = null) {
   const t = $("#toast");
-  t.textContent = message;
+  t.innerHTML = "";
   t.dataset.type = type;
-  t.classList.add("is-visible");
+  t.append(el("span", "toast__msg", message));
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("is-visible"), 4000);
+  if (action) {
+    const btn = el("button", "toast__action", action.label);
+    btn.addEventListener("click", () => { hideToast(); action.onClick(); });
+    t.append(btn);
+    t.classList.add("is-visible"); // stays until the user acts
+  } else {
+    t.classList.add("is-visible");
+    toastTimer = setTimeout(hideToast, 4000);
+  }
 }
 
 /* ========== loading state ========== */
@@ -478,14 +501,17 @@ async function loadWeather(geo) {
     localStorage.setItem("lastGeo", JSON.stringify(geo));
   } catch (e) {
     setLoading(false);
-    showToast(friendlyError(e), "error");
+    showToast(friendlyError(e), "error", { label: "Retry", onClick: () => loadWeather(geo) });
     console.error(e);
   }
 }
 
 // Map low-level errors to readable messages
 function friendlyError(e) {
-  if (e instanceof TypeError) return "Couldn't connect — please check your internet connection.";
+  if (e?.name === "TimeoutError" || e?.name === "AbortError")
+    return "The weather service is taking too long to respond.";
+  if (e instanceof TypeError)
+    return "Couldn't connect — please check your internet connection.";
   return e?.message || "Something went wrong. Please try again.";
 }
 
@@ -494,7 +520,7 @@ async function loadByCity(query) {
     const [g] = await geocodeSearch(query, 1);
     await loadWeather({ lat: g.latitude, lon: g.longitude, name: g.name, tz: g.timezone });
   } catch (e) {
-    showToast(friendlyError(e), "error");
+    showToast(friendlyError(e), "error", { label: "Retry", onClick: () => loadByCity(query) });
   }
 }
 

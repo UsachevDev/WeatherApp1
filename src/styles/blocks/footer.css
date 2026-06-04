@@ -25,6 +25,7 @@
 .toast.is-visible {
   opacity: 1;
   transform: translate(-50%, 0);
+  pointer-events: auto;
 }
 .toast::before {
   content: "";
@@ -36,6 +37,24 @@
 }
 .toast[data-type="error"]::before {
   background: #ff8e8e;
+}
+.toast__msg {
+  flex: 1;
+}
+.toast__action {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: var(--fz-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--glass-stroke);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toast__action:hover {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 /* ===== Loading skeleton ===== */
