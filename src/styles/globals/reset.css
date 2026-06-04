@@ -29,7 +29,16 @@ button,
 textarea,
 select {
   font: inherit;
+  color: inherit;
   border: none;
   outline: none;
   background: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(142, 197, 255, 0.35);
 }

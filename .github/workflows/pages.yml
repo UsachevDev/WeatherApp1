@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ "sprint-1-task-1" ]   # твоя ветка
+    branches: [ "sprint-1-task-1" ]   # deploy branch
   workflow_dispatch:
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
           cp -R src/* dist/
           cp -R public/* dist/public/
 
-          # Безопасная правка путей (если совпадений нет — команды просто ничего не сделают)
+          # Safe path rewrites (no-op if there are no matches)
           # HTML/JS: ../public/ -> ./public/
           find dist -type f \( -name '*.html' -o -name '*.js' \) -print0 \
             | xargs -0 -r sed -i 's#\.\./public/#./public/#g' || true

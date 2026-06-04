@@ -7,4 +7,6 @@
 @import "./blocks/weather.css";
 @import "./blocks/card.css";
 @import "./blocks/slider.css";
+@import "./blocks/daily.css";
+@import "./blocks/modal.css";
 @import "./blocks/footer.css";

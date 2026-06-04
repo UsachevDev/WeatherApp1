@@ -1,155 +1,111 @@
 # WeatherApp
 
-Мини‑приложение погоды на **HTML + CSS + Vanilla JS**.
-Панель со “стеклом”, шапка с поиском, левый блок текущей погоды, правые карточки метрик и горизонтальный слайдер почасового прогноза.
+A modern, glassmorphism weather dashboard built with **HTML + CSS + vanilla JavaScript** — no frameworks, no build step.
+It features live current conditions, an hourly forecast, a 7-day outlook, and a background that shifts with the weather and time of day.
 
-**API:** Open‑Meteo
-- Геокодер: https://geocoding-api.open-meteo.com/v1/search  
-- Прогноз:  https://api.open-meteo.com/v1/forecast
+**Live demo:** https://usachevdev.github.io/WeatherApp1/
 
----
-
-## Возможности
-
-- Стеклянная панель (glassmorphism) с пресетами: `light`, `dim`, `solid` (через CSS‑токены).
-- Поиск с автодополнением (подсказки), переключение кнопок submit/clear.
-- Текущая погода: город, локальная дата/время (таймзона), температура, статус, «ощущается как».
-- Иконки погоды (день/ночь), маппинг кодов Open‑Meteo.
-- Почасовой слайдер (горизонтальный, scroll‑snap, кастомный скроллбар).
-- Карточки метрик: влажность, ветер, давление, видимость, восход, закат.
-- Доступность: корректные фокусы, respect `prefers-reduced-motion`, читаемость текста над светлым фоном.
-- Сохранение последнего города в `localStorage`.
+**Data:** [Open-Meteo](https://open-meteo.com/) (free, no API key)
+- Forecast: `https://api.open-meteo.com/v1/forecast`
+- Geocoding: `https://geocoding-api.open-meteo.com/v1/search`
+- Reverse geocoding (for the "use my location" button): [BigDataCloud](https://www.bigdatacloud.com/)
 
 ---
 
-## Запуск локально
+## Features
 
-Никаких сборщиков не требуется, это статический проект.
+- 🔍 **City search with autocomplete** — debounced suggestions, full keyboard support (↑ / ↓ / Enter / Esc) and mouse.
+- 📍 **Use my location** — one tap geolocation with graceful fallback if permission is denied.
+- 🌡️ **Unit switch** — toggle between °C / m/s / hPa / km and °F / mph / inHg / mi; the choice is remembered.
+- ⛅ **Current conditions** — temperature, description, "feels like", and today's high / low.
+- 📊 **Six metric cards** — humidity, wind, pressure, visibility, sunrise and sunset.
+- 🕒 **24-hour forecast** — horizontal, scroll-snapping slider with the current hour highlighted.
+- 📅 **7-day forecast** — daily icons plus a temperature-range bar for each day.
+- 🎨 **Dynamic background** — an animated gradient that adapts to the weather group and day / night.
+- 💎 **Glassmorphism UI** — frosted panels with `light` / `dim` / `solid` presets via CSS tokens.
+- ⏳ **Polished states** — shimmering loading skeletons and toast notifications for errors.
+- 📱 **Fully responsive** — fluid layout from 360px phones to widescreen desktops.
+- ♿ **Accessible** — visible focus rings, ARIA roles on the search listbox, and `prefers-reduced-motion` support.
+- 💾 **Persistent** — the last viewed location and unit preference are saved to `localStorage`.
+
+---
+
+## Run locally
+
+No bundler required — it's a static site.
 
 ```bash
-# Вариант 1 (Node)
-npx http-server . -p 5500
+# Option 1 (Node)
+npx http-server . -p 5500 -c-1
 
-# Вариант 2 (Python 3)
+# Option 2 (Python 3)
 python -m http.server 5500
 ```
 
-Открой в браузере: **http://localhost:5500/src/index.html**  
-> В VS Code можно использовать расширение **Live Server** и открыть `src/index.html` напрямую.
+Then open **http://localhost:5500/** (the root redirects to the app) or go straight to
+**http://localhost:5500/src/index.html**.
+
+> In VS Code you can also use the **Live Server** extension and open `src/index.html` directly.
 
 ---
 
-## Структура проекта
+## Project structure
 
 ```
 public/
   images/
-    bg-cloudy.png
     icons/
       logo.svg
-      search.svg
-      close.svg
-      weather/
-        01d.svg 01n.svg ... 50d.svg 50n.svg
+      weather/                # 01d.png … 50n.png (Open-Meteo code icons)
 src/
+  index.html
   scripts/
-    main.js
+    main.js                   # app logic: API, state, rendering, interactions
   styles/
     globals/
-      variables.css
       reset.css
-      layout.css
+      variables.css           # design tokens (colors, glass, spacing, type)
+      layout.css              # shell + dynamic background palettes
     blocks/
-      stage.css
-      header.css
-      weather.css
-      card.css
-      slider.css
-  index.html
-README.md
+      stage.css  header.css  weather.css  card.css
+      slider.css  daily.css   footer.css  # (footer.css holds toast + skeleton)
+    main.css                  # @import manifest
+index.html                    # root redirect → src/index.html (local convenience)
 ```
 
 ---
 
-## Темизация и токены
+## Theming & tokens
 
-Все переменные — в `styles/globals/variables.css`.
+All design tokens live in [`src/styles/globals/variables.css`](src/styles/globals/variables.css).
 
-Переключение пресета стекла:
+Switch the glass frosting preset on the `<body>`:
+
 ```html
-<body data-glass="dim"> <!-- варианты: light (по умолчанию), dim, solid -->
+<body data-glass="dim">   <!-- options: dim (default), solid -->
 ```
-Ключевые токены:
-- `--neutral-600-10`, `--frost-40` — фон панели и элементов.
-- `--glass-blur`, `--glass-radius`, `--glass-stroke`, `--glass-inner` — поведение стекла.
-- `--txt-glow-weak`, `--txt-glow-strong`, `--txt-temp` — читаемость текста.
-- Размеры: `--stage-w`, `--weather-w`, `--card-w`, `--card-h`, `--search-*`, `--hour-*`.
 
-
----
-
-## Деплой автоматически (GitHub Pages)
-
-1. Создать `.github/workflows/pages.yml` (автосборка в `dist/` и деплой):
-   ```yaml
-   name: Deploy to GitHub Pages
-
-   on:
-     push:
-       branches: [ "sprint-1-task-1" ]
-     workflow_dispatch:
-
-   permissions:
-     contents: read
-     pages: write
-     id-token: write
-
-   concurrency:
-     group: "pages"
-     cancel-in-progress: false
-
-   jobs:
-     build:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-         - name: Prepare dist
-           run: |
-             rm -rf dist
-             mkdir -p dist
-             cp -R src/* dist/
-             mkdir -p dist/public
-             cp -R public/* dist/public
-             grep -rl "\.\./public/" dist | xargs sed -i 's#\.\./public/#./public/#g'
-             grep -rl "\.\./\.\./\.\./public/" dist/styles | xargs sed -i 's#\.\./\.\./\.\./public/#\.\./\.\./public/#g'
-         - uses: actions/upload-pages-artifact@v3
-           with: { path: dist }
-
-     deploy:
-       environment:
-         name: github-pages
-         url: ${{ steps.deployment.outputs.page_url }}
-       runs-on: ubuntu-latest
-       needs: build
-       steps:
-         - id: deployment
-           uses: actions/deploy-pages@v4
-   ```
-
-2. Коммит и пуш:
-   ```bash
-   git add .github/workflows/pages.yml
-   git commit -m "ci(pages): auto build & deploy to GitHub Pages"
-   git push -u origin HEAD
-   ```
-
-3. **Settings → Pages → Build and deployment**: Source = **GitHub Actions**.
+Key tokens:
+- `--panel-bg`, `--frost`, `--frost-strong` — panel and element fills.
+- `--glass-blur`, `--glass-radius`, `--glass-stroke`, `--glass-inner` — glass behavior.
+- `--txt-glow-weak` / `--txt-glow-strong` / `--txt-temp` — text legibility over imagery.
+- `--bg-a` / `--bg-b` / `--bg-c` — background gradient stops, swapped per weather in `layout.css`.
 
 ---
 
-## Доступность
+## Deployment
 
-- Фокус — на контейнере поиска `.search:focus-within` (нет «двойного бордера» у `<input>`).
-- Подсказки — listbox; стрелки/мышь.
-- `prefers-reduced-motion: reduce` — выключает анимации/переходы.
-- Текст над светлыми облаками читается за счёт мягких `text-shadow`‑токенов.
+A GitHub Actions workflow ([`.github/workflows/pages.yml`](.github/workflows/pages.yml)) builds a flat `dist/`
+from `src/` + `public/`, rewrites the asset paths, and publishes to GitHub Pages on every push to the deploy branch.
+
+1. **Settings → Pages → Build and deployment:** set **Source = GitHub Actions**.
+2. Push to the branch configured in the workflow — the site deploys automatically.
+
+---
+
+## Accessibility notes
+
+- Focus is shown on the search container (`.search:focus-within`) to avoid a double border on the input.
+- Suggestions use a `listbox` / `option` pattern with arrow-key and mouse navigation.
+- `prefers-reduced-motion: reduce` disables all animations and transitions.
+- Soft `text-shadow` tokens keep text readable over bright backgrounds.

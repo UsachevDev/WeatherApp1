@@ -1,9 +1,73 @@
-.stage__footer {
-  height: 84px;
+/* ===== Toast notifications ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 24px);
+  z-index: 100;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-top: 1px solid var(--glass-stroke);
-  opacity: 0.75;
+  gap: 10px;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 12px 18px;
+  background: rgba(18, 22, 36, 0.86);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--glass-radius-sm);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-text-primary);
   font-size: var(--fz-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+}
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.toast::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #8ec5ff;
+}
+.toast[data-type="error"]::before {
+  background: #ff8e8e;
+}
+
+/* ===== Loading skeleton ===== */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  to { transform: translateX(100%); }
+}
+
+.is-loading .skeleton img,
+.is-loading .skeleton svg {
+  visibility: hidden;
+}
+.is-loading .weather__icon {
+  visibility: hidden;
 }

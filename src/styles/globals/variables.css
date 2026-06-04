@@ -1,77 +1,76 @@
 :root {
-  --font-family: "Raleway", sans-serif;
+  --font-family: "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  --page-min-width: 1280px;
+  /* ===== Layout ===== */
   --stage-w: 1120px;
   --stage-pad: 32px;
+  --content-pad: 20px;
 
-  --search-w: 506px;
   --search-h: 48px;
   --search-px: 16px;
-  --search-btn: 32px;
+  --search-btn: 36px;
 
-  --cards-col: 3;
-  --card-w: 158px;
-  --card-h: 196px;
-  --cards-gap: 16px;
+  --card-h: 132px;
+  --hour-item-w: 92px;
+  --hour-icon: 52px;
 
-  --weather-w: 534px;
-  --weather-h: 408px;
-
-  --slider-h: 192px;
-  --hour-item-w: 96px;
-  --hour-icon: 56px;
-  --hour-gap: 16px;
-
-  --color-text-primary: #f5f4f4;
-  --text-dim: #f5f4f4cc;
-  --neutral-600-10: #7070701a;
-  --frost-40: #f5f4f466;
-
-  --glass-blur: 50px;
-  --glass-radius: 8px;
-  --glass-stroke: #ffffff29;
-  --glass-inner: rgba(255, 255, 255, 0.18);
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
-  --ring: #ffffff66;
-
-  --txt-glow-weak: 0 1px 2px rgba(0, 0, 0, 0.28), 0 0 10px rgba(0, 0, 0, 0.2);
-  --txt-glow-strong: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 18px rgba(0, 0, 0, 0.3);
-  --txt-temp: 0 2px 6px rgba(0, 0, 0, 0.35), 0 0 16px rgba(0, 0, 0, 0.28);
-
-  --gap-lg: 24px;
-  --gap-md: 16px;
+  /* ===== Spacing scale ===== */
+  --gap-xs: 6px;
   --gap-sm: 8px;
+  --gap-md: 16px;
+  --gap-lg: 24px;
+  --gap-xl: 32px;
 
-  --fz-xxl: 112px;
-  --fz-lg: 24px;
-  --fz-md: 20px;
+  /* ===== Type scale (fluid) ===== */
+  --fz-temp: clamp(72px, 12vw, 120px);
+  --fz-xl: clamp(28px, 4vw, 36px);
+  --fz-lg: clamp(20px, 2.4vw, 24px);
+  --fz-md: clamp(16px, 1.8vw, 19px);
   --fz-sm: 14px;
+  --fz-xs: 12px;
 
-  --lh-xxl: 112px;
-  --lh-lg: 32px;
-  --lh-md: 24px;
+  /* ===== Color & glass ===== */
+  --color-text-primary: #f6f7fb;
+  --text-dim: rgba(246, 247, 251, 0.72);
+  --text-faint: rgba(246, 247, 251, 0.5);
+  --accent: #8ec5ff;
+
+  --panel-bg: rgba(20, 24, 38, 0.28);
+  --frost: rgba(255, 255, 255, 0.08);
+  --frost-strong: rgba(255, 255, 255, 0.14);
+
+  --glass-blur: 36px;
+  --glass-radius: 14px;
+  --glass-radius-sm: 10px;
+  --glass-stroke: rgba(255, 255, 255, 0.18);
+  --glass-inner: rgba(255, 255, 255, 0.16);
+
+  --shadow-md: 0 10px 30px rgba(8, 12, 24, 0.28);
+  --shadow-lg: 0 28px 70px rgba(8, 12, 24, 0.42);
+  --ring: rgba(142, 197, 255, 0.85);
+
+  /* ===== Text legibility over imagery ===== */
+  --txt-glow-weak: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --txt-glow-strong: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --txt-temp: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+  /* ===== Motion ===== */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 0.45s;
 }
 
-/* ===== GLASS PRESETS ===== */
-
+/* ===== Glass presets (depth of frosting) ===== */
 [data-glass="dim"] {
-  --neutral-600-10: #70707040; /* ≈25% */
-  --frost-40: #f5f4f440; /* ≈25% */
-  --glass-inner: rgba(255, 255, 255, 0.1);
-  --glass-stroke: #ffffff24;
-  --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.24);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.28);
-  --text-dim: #f5f4f4b3;
+  --panel-bg: rgba(18, 22, 36, 0.3);
+  --frost: rgba(255, 255, 255, 0.07);
+  --frost-strong: rgba(255, 255, 255, 0.12);
+  --glass-stroke: rgba(255, 255, 255, 0.16);
 }
 
 [data-glass="solid"] {
-  --neutral-600-10: #70707059; /* ≈35% */
-  --frost-40: #f5f4f433; /* ≈20% */
-  --glass-inner: rgba(255, 255, 255, 0.06);
-  --glass-stroke: #ffffff1f;
-  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.26);
-  --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.3);
-  --text-dim: #f5f4f499;
+  --panel-bg: rgba(14, 18, 30, 0.52);
+  --frost: rgba(255, 255, 255, 0.05);
+  --frost-strong: rgba(255, 255, 255, 0.1);
+  --glass-stroke: rgba(255, 255, 255, 0.14);
+  --glass-blur: 22px;
 }

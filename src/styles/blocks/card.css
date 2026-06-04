@@ -1,42 +1,75 @@
 .cards {
   display: grid;
-  grid-template-columns: repeat(var(--cards-col), var(--card-w));
-  grid-auto-rows: var(--card-h);
-  gap: var(--cards-gap);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap-md);
 }
 
 .card {
-  background: var(--frost-40);
-  border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-stroke);
-  box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-inner);
-  overflow: hidden;
-  display: flex;
-}
-
-.card__body {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 16px;
-  width: 100%;
-  height: 100%;
+  gap: var(--gap-sm);
+  min-height: var(--card-h);
+  padding: var(--content-pad);
+  border-radius: var(--glass-radius);
+  background: var(--frost);
+  border: 1px solid var(--glass-stroke);
+  box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-inner);
+  transition: transform 0.25s var(--ease), background 0.25s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  background: var(--frost-strong);
 }
 
-.card__title {
-  font-size: 12px;
-  line-height: 16px;
-  letter-spacing: 0.02em;
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--text-dim);
+}
+.card__icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+.card__title {
+  font-size: var(--fz-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-shadow: var(--txt-glow-weak);
 }
 
 .card__value {
   margin-top: auto;
   font-weight: 700;
-  font-size: 20px;
-  line-height: 24px;
-  color: var(--color-text-primary);
+  font-size: var(--fz-lg);
+  line-height: 1.15;
   text-shadow: var(--txt-glow-weak);
+}
+.card__value small {
+  font-size: 0.55em;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-left: 2px;
+}
+
+.card__hint {
+  font-size: var(--fz-xs);
+  color: var(--text-faint);
+}
+
+@media (max-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .cards {
+    grid-template-columns: 1fr 1fr;
+  }
+  .card {
+    min-height: 110px;
+    padding: 14px;
+  }
 }

@@ -1,0 +1,113 @@
+.daily {
+  border-radius: var(--glass-radius);
+  background: var(--frost);
+  border: 1px solid var(--glass-stroke);
+  box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-inner);
+  padding: 8px var(--content-pad);
+}
+
+.daily__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.daily__item {
+  display: grid;
+  grid-template-columns: 1.4fr 0.6fr 2fr auto;
+  align-items: center;
+  gap: var(--gap-md);
+  padding: 12px;
+  margin: 0 -12px;
+  border-radius: var(--glass-radius-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.daily__item:last-child {
+  border-bottom: none;
+}
+.daily__item:hover,
+.daily__item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.daily__chev {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--text-faint);
+  transition: transform 0.18s, color 0.18s;
+}
+.daily__item:hover .daily__chev {
+  color: var(--color-text-primary);
+  transform: translateX(3px);
+}
+
+.daily__day {
+  font-weight: 600;
+  font-size: var(--fz-sm);
+  text-shadow: var(--txt-glow-weak);
+}
+.daily__day span {
+  display: block;
+  font-weight: 400;
+  font-size: var(--fz-xs);
+  color: var(--text-faint);
+}
+
+.daily__cond {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.daily__icon {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
+}
+
+/* Temperature range bar */
+.daily__range {
+  display: grid;
+  grid-template-columns: 2.4em 1fr 2.4em;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fz-sm);
+}
+.daily__lo {
+  color: var(--text-dim);
+  text-align: right;
+}
+.daily__hi {
+  font-weight: 700;
+}
+.daily__track {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.daily__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8ec5ff, #ffd28e);
+}
+
+@media (max-width: 560px) {
+  .daily__item {
+    grid-template-columns: 1.2fr 0.5fr 1.6fr auto;
+    gap: 10px;
+  }
+  .daily__day span {
+    display: none;
+  }
+  .daily__chev {
+    display: none;
+  }
+}
