@@ -31,8 +31,8 @@ jobs:
           cp -R public/* dist/public/
 
           # Safe path rewrites (no-op if there are no matches)
-          # HTML/JS: ../public/ -> ./public/
-          find dist -type f \( -name '*.html' -o -name '*.js' \) -print0 \
+          # HTML/JS/JSON: ../public/ -> ./public/
+          find dist -type f \( -name '*.html' -o -name '*.js' -o -name '*.json' \) -print0 \
             | xargs -0 -r sed -i 's#\.\./public/#./public/#g' || true
 
           # CSS: ../../../public/ -> ../../public/

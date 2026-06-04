@@ -36,6 +36,8 @@ const ICONS = {
   sunset: `<svg class="card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7V3M5.6 9.6 4 8M18.4 9.6 20 8M2 18h20M8 18a4 4 0 0 1 8 0M9 4l3 3 3-3"/></svg>`,
   uv: `<svg class="card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   github: `<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.555-1.11-4.555-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>`,
 };
 
 /* ========== weather code → description / icon / palette group ========== */
@@ -783,6 +785,9 @@ async function loadWeather(geo) {
     renderInsights(data);
     renderDaily(data);
     localStorage.setItem("lastGeo", JSON.stringify(geo));
+    updateShareUrl(geo);
+    updateStar();
+    renderFavorites();
 
     // air quality loads independently — never blocks the main view
     fetchAirQuality(geo.lat, geo.lon, geo.tz)
@@ -793,6 +798,105 @@ async function loadWeather(geo) {
     showToast(friendlyError(e), "error", { label: "Retry", onClick: () => loadWeather(geo) });
     console.error(e);
   }
+}
+
+/* ========== favorites ========== */
+const favKey = (g) => `${(+g.lat).toFixed(2)},${(+g.lon).toFixed(2)}`;
+const getFavorites = () => {
+  try { return JSON.parse(localStorage.getItem("favorites")) || []; } catch { return []; }
+};
+const saveFavorites = (f) => localStorage.setItem("favorites", JSON.stringify(f));
+const isFavorite = (g) => g && getFavorites().some((x) => favKey(x) === favKey(g));
+
+function toggleFavorite() {
+  const g = state.geo;
+  if (!g) return;
+  let f = getFavorites();
+  if (isFavorite(g)) {
+    f = f.filter((x) => favKey(x) !== favKey(g));
+    showToast(`Removed ${g.name} from favorites`);
+  } else {
+    f = [{ name: g.name, lat: g.lat, lon: g.lon, tz: g.tz }, ...f].slice(0, 12);
+    showToast(`Saved ${g.name} to favorites`);
+  }
+  saveFavorites(f);
+  updateStar();
+  renderFavorites();
+}
+
+function updateStar() {
+  const btn = $(".js-fav");
+  if (!btn) return;
+  const on = isFavorite(state.geo);
+  btn.classList.toggle("is-active", on);
+  btn.setAttribute("aria-pressed", String(on));
+  btn.title = on ? "Remove from favorites" : "Save to favorites";
+}
+
+function renderFavorites() {
+  const bar = $(".favorites");
+  if (!bar) return;
+  const f = getFavorites();
+  bar.innerHTML = "";
+  bar.classList.toggle("is-empty", f.length === 0);
+  f.forEach((g) => {
+    const chip = el("button", "fav-chip");
+    chip.type = "button";
+    if (state.geo && favKey(g) === favKey(state.geo)) chip.classList.add("is-active");
+    chip.append(el("span", "fav-chip__name", g.name));
+    const rm = el("span", "fav-chip__x", "×");
+    rm.setAttribute("role", "button");
+    rm.title = `Remove ${g.name}`;
+    rm.addEventListener("click", (e) => {
+      e.stopPropagation();
+      saveFavorites(getFavorites().filter((x) => favKey(x) !== favKey(g)));
+      updateStar();
+      renderFavorites();
+    });
+    chip.append(rm);
+    chip.addEventListener("click", () => loadWeather(g));
+    bar.append(chip);
+  });
+}
+
+/* ========== shareable links ========== */
+function geoToParams(g) {
+  return new URLSearchParams({ name: g.name, lat: g.lat, lon: g.lon, tz: g.tz }).toString();
+}
+function updateShareUrl(g) {
+  history.replaceState(null, "", `${location.pathname}?${geoToParams(g)}`);
+}
+function geoFromUrl() {
+  const p = new URLSearchParams(location.search);
+  const lat = parseFloat(p.get("lat"));
+  const lon = parseFloat(p.get("lon"));
+  if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
+    return {
+      name: p.get("name") || "Shared location",
+      lat, lon,
+      tz: p.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+  }
+  return p.get("q") ? { q: p.get("q") } : null;
+}
+async function copyShareLink() {
+  if (!state.geo) return;
+  const url = `${location.origin}${location.pathname}?${geoToParams(state.geo)}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast("Shareable link copied to clipboard");
+  } catch {
+    showToast("Couldn't copy the link", "error");
+  }
+}
+
+/* ========== PWA service worker ========== */
+function registerSW() {
+  if (!("serviceWorker" in navigator)) return;
+  if (location.protocol !== "http:" && location.protocol !== "https:") return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => { /* offline support optional */ });
+  });
 }
 
 // Map low-level errors to readable messages
@@ -902,6 +1006,19 @@ function buildHeader() {
   geoBtn.setAttribute("aria-label", "Use my location");
   geoBtn.addEventListener("click", () => loadByGeolocation(geoBtn));
 
+  const favBtn = el("button", "icon-btn js-fav", ICONS.star);
+  favBtn.type = "button";
+  favBtn.title = "Save to favorites";
+  favBtn.setAttribute("aria-label", "Save to favorites");
+  favBtn.setAttribute("aria-pressed", "false");
+  favBtn.addEventListener("click", toggleFavorite);
+
+  const shareBtn = el("button", "icon-btn", ICONS.share);
+  shareBtn.type = "button";
+  shareBtn.title = "Copy shareable link";
+  shareBtn.setAttribute("aria-label", "Copy shareable link");
+  shareBtn.addEventListener("click", copyShareLink);
+
   const toggle = el("div", "unit-toggle");
   toggle.setAttribute("role", "group");
   toggle.setAttribute("aria-label", "Temperature units");
@@ -915,7 +1032,7 @@ function buildHeader() {
   };
   toggle.append(mkUnit("metric", "°C"), mkUnit("imperial", "°F"));
 
-  actions.append(geoBtn, toggle);
+  actions.append(geoBtn, favBtn, shareBtn, toggle);
   header.append(logoLink, form, actions);
   return header;
 }
@@ -1116,6 +1233,7 @@ function render() {
   const stage = el("section", "stage");
 
   stage.append(buildHeader());
+  stage.append(el("div", "favorites is-empty"));
 
   const grid = el("div", "stage__grid");
   grid.append(buildWeather(), buildCards());
@@ -1132,9 +1250,17 @@ function render() {
 
 render();
 fx = createWeatherFX(document.getElementById("fx"));
+renderFavorites();
+registerSW();
 
-/* initial load: last location → default city */
+/* initial load: shared link → last location → default city */
 (function start() {
+  const fromUrl = geoFromUrl();
+  if (fromUrl) {
+    if (fromUrl.q) loadByCity(fromUrl.q);
+    else loadWeather(fromUrl);
+    return;
+  }
   const saved = localStorage.getItem("lastGeo");
   if (saved) {
     try {

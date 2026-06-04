@@ -1,0 +1,19 @@
+{
+  "name": "WeatherApp — live weather & forecast",
+  "short_name": "WeatherApp",
+  "description": "A modern glassmorphism weather app with live conditions, hourly and 7-day forecasts.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#10141f",
+  "theme_color": "#1f2937",
+  "icons": [
+    {
+      "src": "../public/images/icons/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
